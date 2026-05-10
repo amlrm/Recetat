@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sign Up - NutriLife</title>
+    <link rel="stylesheet" href="assets/css/style.css">
+</head>
+<body>
+
+    <div class="auth-page">
+        <div class="auth-image">
+            <img src="https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=1000&q=80" alt="Colorful healthy salad bowl">
+            <div class="auth-image-overlay">
+                <h2>Start Eating Better Today</h2>
+                <p>Join NutriLife and get access to thousands of healthy recipes, personalized meal plans, and progress tracking tools.</p>
+            </div>
+        </div>
+        <div class="auth-form-side">
+            <div class="auth-card">
+                <a href="index.html" class="brand-link">Nutri<span>Life</span></a>
+                <h2>Create your account</h2>
+                <p class="subtitle">Fill in your details to get started</p>
+
+                <form id="registerForm" onsubmit="handleRegister(event)">
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="firstName">First Name</label>
+                            <input type="text" id="firstName" name="firstName" placeholder="John">
+                        </div>
+                        <div class="form-group">
+                            <label for="lastName">Last Name</label>
+                            <input type="text" id="lastName" name="lastName" placeholder="Doe">
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="username">Username</label>
+                        <input type="text" id="username" name="username" placeholder="johndoe" required minlength="3">
+                        <span class="error-msg" id="usernameError">Username must be at least 3 characters</span>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="email">Email Address</label>
+                        <input type="email" id="email" name="email" placeholder="john@example.com" required>
+                        <span class="error-msg" id="emailError">Please enter a valid email address</span>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="password">Password</label>
+                        <div class="password-wrapper">
+                            <input type="password" id="password" name="password" placeholder="Min. 8 characters" required minlength="8">
+                            <button type="button" class="password-toggle" onclick="togglePassword('password', this)">Show</button>
+                        </div>
+                        <span class="error-msg" id="passwordError">Password must be at least 8 characters</span>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="confirmPassword">Confirm Password</label>
+                        <div class="password-wrapper">
+                            <input type="password" id="confirmPassword" name="confirmPassword" placeholder="Repeat your password" required>
+                            <button type="button" class="password-toggle" onclick="togglePassword('confirmPassword', this)">Show</button>
+                        </div>
+                        <span class="error-msg" id="confirmError">Passwords do not match</span>
+                    </div>
+
+                    <button type="submit" class="btn btn-primary btn-block btn-lg" id="registerBtn" style="margin-top: 8px;">Create Account</button>
+                </form>
+
+                <div class="auth-footer">
+                    Already have an account? <a href="login.html">Sign in</a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="assets/js/auth.js"></script>
+    <script>
+        function togglePassword(fieldId, btn) {
+            const field = document.getElementById(fieldId);
+            if (field.type === 'password') {
+                field.type = 'text';
+                btn.textContent = 'Hide';
+            } else {
+                field.type = 'password';
+                btn.textContent = 'Show';
+            }
+        }
+
+        function validateForm() {
+            let valid = true;
+            const username = document.getElementById('username');
+            const email = document.getElementById('email');
+            const password = document.getElementById('password');
+            const confirmPassword = document.getElementById('confirmPassword');
+
+            document.querySelectorAll('.error-msg').forEach(el => el.classList.remove('visible'));
+            document.querySelectorAll('input').forEach(el => el.classList.remove('error'));
+
+            if (username.value.trim().length < 3) {
+                username.classList.add('error');
+                document.getElementById('usernameError').classList.add('visible');
+                valid = false;
+            }
+            if (!email.value.match(/^[^\s@]+@[^\s@]+\.[^\s@]+$/)) {
+                email.classList.add('error');
+                document.getElementById('emailError').classList.add('visible');
+                valid = false;
+            }
+            if (password.value.length < 8) {
+                password.classList.add('error');
+                document.getElementById('passwordError').classList.add('visible');
+                valid = false;
+            }
+            if (password.value !== confirmPassword.value) {
+                confirmPassword.classList.add('error');
+                document.getElementById('confirmError').classList.add('visible');
+                valid = false;
+            }
+            return valid;
+        }
+
+        async function handleRegister(e) {
+            e.preventDefault();
+            if (!validateForm()) return;
+
+            const btn = document.getElementById('registerBtn');
+            btn.disabled = true;
+            btn.innerHTML = '<span class="spinner"></span> Creating account...';
+
+            const username = document.getElementById('username').value.trim();
+            const email = document.getElementById('email').value.trim();
+            const password = document.getElementById('password').value;
+            const firstName = document.getElementById('firstName').value.trim();
+            const lastName = document.getElementById('lastName').value.trim();
+
+            await registerUser(username, email, password, firstName, lastName);
+
+            btn.disabled = false;
+            btn.textContent = 'Create Account';
+        }
+    </script>
+</body>
+</html>

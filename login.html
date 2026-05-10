@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login - NutriLife</title>
+    <link rel="stylesheet" href="assets/css/style.css">
+</head>
+<body>
+
+    <div class="auth-page">
+        <div class="auth-image">
+            <img src="https://images.unsplash.com/photo-1495521821757-a1efb6729352?w=1000&q=80" alt="Fresh ingredients on wooden table">
+            <div class="auth-image-overlay">
+                <h2>Welcome Back</h2>
+                <p>Pick up right where you left off. Your recipes, meal plans, and progress are waiting for you.</p>
+            </div>
+        </div>
+        <div class="auth-form-side">
+            <div class="auth-card">
+                <a href="index.html" class="brand-link">Nutri<span>Life</span></a>
+                <h2>Sign in</h2>
+                <p class="subtitle">Enter your credentials to continue</p>
+
+                <form id="loginForm" onsubmit="handleLogin(event)">
+                    <div class="form-group">
+                        <label for="email">Email Address</label>
+                        <input type="email" id="email" name="email" placeholder="john@example.com" required>
+                        <span class="error-msg" id="emailError">Please enter a valid email address</span>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="password">Password</label>
+                        <div class="password-wrapper">
+                            <input type="password" id="password" name="password" placeholder="Enter your password" required>
+                            <button type="button" class="password-toggle" onclick="togglePassword()">Show</button>
+                        </div>
+                        <span class="error-msg" id="passwordError">Password is required</span>
+                    </div>
+
+                    <button type="submit" class="btn btn-primary btn-block btn-lg" id="loginBtn" style="margin-top: 8px;">Sign In</button>
+                </form>
+
+                <div class="auth-footer">
+                    Don't have an account? <a href="register.html">Create one</a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="assets/js/auth.js"></script>
+    <script>
+        function togglePassword() {
+            const field = document.getElementById('password');
+            const btn = document.querySelector('.password-toggle');
+            if (field.type === 'password') {
+                field.type = 'text';
+                btn.textContent = 'Hide';
+            } else {
+                field.type = 'password';
+                btn.textContent = 'Show';
+            }
+        }
+
+        async function handleLogin(e) {
+            e.preventDefault();
+            const email = document.getElementById('email');
+            const password = document.getElementById('password');
+
+            document.querySelectorAll('.error-msg').forEach(el => el.classList.remove('visible'));
+            document.querySelectorAll('input').forEach(el => el.classList.remove('error'));
+
+            let valid = true;
+            if (!email.value.match(/^[^\s@]+@[^\s@]+\.[^\s@]+$/)) {
+                email.classList.add('error');
+                document.getElementById('emailError').classList.add('visible');
+                valid = false;
+            }
+            if (!password.value) {
+                password.classList.add('error');
+                document.getElementById('passwordError').classList.add('visible');
+                valid = false;
+            }
+            if (!valid) return;
+
+            const btn = document.getElementById('loginBtn');
+            btn.disabled = true;
+            btn.innerHTML = '<span class="spinner"></span> Signing in...';
+
+            await loginUser(email.value.trim(), password.value);
+
+            btn.disabled = false;
+            btn.textContent = 'Sign In';
+        }
+    </script>
+</body>
+</html>

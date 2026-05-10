@@ -1,0 +1,846 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard - NutriLife</title>
+    <link rel="stylesheet" href="assets/css/style.css">
+    <style>
+        /* Dashboard-specific styles */
+        .welcome-banner {
+            background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+            border-radius: var(--radius-lg);
+            padding: 32px;
+            color: #fff;
+            margin-bottom: 28px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 20px;
+        }
+        .welcome-banner h2 { color: #fff; font-size: 1.5rem; margin-bottom: 6px; }
+        .welcome-banner p { color: rgba(255,255,255,0.8); font-size: 0.9rem; }
+        .welcome-banner img { width: 120px; height: 120px; border-radius: var(--radius-md); object-fit: cover; opacity: 0.85; }
+
+        .meal-plan-builder { background: #fff; border-radius: var(--radius-lg); border: 1px solid var(--border-light); padding: 28px; margin-bottom: 24px; }
+        .meal-plan-builder h3 { margin-bottom: 20px; }
+
+        .meal-day { border: 1px solid var(--border-light); border-radius: var(--radius-md); margin-bottom: 16px; overflow: hidden; }
+        .meal-day-header { background: var(--bg); padding: 12px 18px; font-weight: 600; font-size: 0.9rem; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border-light); }
+        .meal-day-header .cal-count { color: var(--text-light); font-weight: 500; font-size: 0.82rem; }
+        .meal-slot { padding: 12px 18px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border-light); }
+        .meal-slot:last-child { border-bottom: none; }
+        .meal-slot-type { font-weight: 600; font-size: 0.82rem; color: var(--primary); text-transform: uppercase; letter-spacing: 0.05em; width: 80px; }
+        .meal-slot-name { flex: 1; font-size: 0.9rem; color: var(--text-mid); }
+        .meal-slot-cal { font-size: 0.8rem; color: var(--text-light); width: 70px; text-align: right; }
+        .meal-slot-actions { margin-left: 10px; }
+
+        .add-meal-btn { background: none; border: 1px dashed var(--border); border-radius: var(--radius); padding: 8px 14px; color: var(--text-light); cursor: pointer; font-size: 0.82rem; font-family: var(--font); transition: all 0.2s; }
+        .add-meal-btn:hover { border-color: var(--primary); color: var(--primary); background: var(--primary-glow); }
+
+        .remove-btn { background: none; border: none; color: var(--text-light); cursor: pointer; font-size: 1rem; padding: 4px 8px; border-radius: 4px; transition: all 0.2s; }
+        .remove-btn:hover { color: var(--error); background: rgba(192,57,43,0.08); }
+
+        .plan-form-row { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 14px; margin-bottom: 20px; }
+
+        .progress-history { margin-top: 28px; }
+        .progress-table { width: 100%; border-collapse: collapse; background: #fff; border-radius: var(--radius-md); overflow: hidden; border: 1px solid var(--border-light); }
+        .progress-table th { background: var(--bg); padding: 12px 16px; text-align: left; font-size: 0.8rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; color: var(--text-light); }
+        .progress-table td { padding: 12px 16px; border-top: 1px solid var(--border-light); font-size: 0.88rem; color: var(--text-mid); }
+        .progress-table tr:hover td { background: var(--bg); }
+
+        .goal-card { background: linear-gradient(135deg, #e8f5e9, #f1f8e9); border: 1px solid #c8e6c9; border-radius: var(--radius-md); padding: 20px; margin-bottom: 20px; }
+        .goal-card h4 { margin-bottom: 8px; color: var(--primary-dark); }
+        .goal-card p { font-size: 0.88rem; color: var(--text-mid); }
+
+        .plans-list { display: grid; gap: 14px; }
+        .plan-card { background: #fff; border: 1px solid var(--border-light); border-radius: var(--radius-md); padding: 20px; display: flex; justify-content: space-between; align-items: center; transition: all 0.2s; cursor: pointer; }
+        .plan-card:hover { border-color: var(--primary); box-shadow: var(--shadow-sm); }
+        .plan-card h4 { font-size: 0.95rem; margin-bottom: 4px; }
+        .plan-card .plan-meta { font-size: 0.8rem; color: var(--text-light); }
+
+        .recipe-picker-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.55); backdrop-filter: blur(6px); display: none; align-items: center; justify-content: center; z-index: 300; }
+        .recipe-picker-overlay.active { display: flex; }
+        .recipe-picker { background: #fff; border-radius: var(--radius-lg); width: 92%; max-width: 640px; max-height: 80vh; overflow-y: auto; padding: 28px; box-shadow: var(--shadow-xl); }
+        .recipe-picker h3 { margin-bottom: 16px; }
+        .recipe-pick-item { display: flex; align-items: center; gap: 14px; padding: 12px; border: 1px solid var(--border-light); border-radius: var(--radius-md); margin-bottom: 8px; cursor: pointer; transition: all 0.2s; }
+        .recipe-pick-item:hover { border-color: var(--primary); background: var(--primary-glow); }
+        .recipe-pick-item img { width: 56px; height: 56px; border-radius: 8px; object-fit: cover; }
+        .recipe-pick-item h4 { font-size: 0.88rem; margin-bottom: 2px; }
+        .recipe-pick-item span { font-size: 0.78rem; color: var(--text-light); }
+
+        @media (max-width: 768px) {
+            .welcome-banner { flex-direction: column; text-align: center; }
+            .welcome-banner img { display: none; }
+            .plan-form-row { grid-template-columns: 1fr; }
+            .stats-grid { grid-template-columns: repeat(2, 1fr); }
+        }
+    </style>
+</head>
+<body>
+
+<div class="dashboard">
+    <aside class="sidebar" id="sidebar">
+        <div class="sidebar-brand">Nutri<span>Life</span></div>
+        <ul class="sidebar-nav">
+            <li><a href="#" class="active" data-tab="overview"><span class="nav-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg></span> Overview</a></li>
+            <li><a href="#" data-tab="recipes"><span class="nav-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg></span> Recipes</a></li>
+            <li><a href="#" data-tab="saved"><span class="nav-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/></svg></span> Saved</a></li>
+            <li><a href="#" data-tab="mealplan"><span class="nav-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg></span> Meal Plan</a></li>
+            <li><a href="#" data-tab="progress"><span class="nav-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/></svg></span> Progress</a></li>
+            <li><a href="#" data-tab="profile"><span class="nav-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg></span> Profile</a></li>
+        </ul>
+        <div class="sidebar-bottom">
+            <a href="#" onclick="logoutUser(); return false;" class="btn btn-outline btn-block btn-sm">Sign Out</a>
+        </div>
+    </aside>
+
+    <div class="main-content">
+        <div class="main-header">
+            <div style="display:flex;align-items:center;gap:15px;">
+                <button class="hamburger" onclick="toggleSidebar()" style="display:none;" id="sidebarToggle"><span></span><span></span><span></span></button>
+                <h1 id="pageTitle">Overview</h1>
+            </div>
+            <div class="user-info">
+                <span id="userGreeting">Hello!</span>
+                <div class="user-avatar" id="userAvatar">U</div>
+            </div>
+        </div>
+
+        <!-- ==================== OVERVIEW ==================== -->
+        <div class="tab-content active" id="tab-overview">
+            <div class="welcome-banner">
+                <div>
+                    <h2 id="welcomeMsg">Welcome to NutriLife!</h2>
+                    <p>Track your meals, discover new recipes, and reach your health goals.</p>
+                </div>
+                <img src="https://images.unsplash.com/photo-1490645935967-10de6ba17061?w=200&q=60" alt="Healthy food">
+            </div>
+
+            <div class="stats-grid">
+                <div class="stat-card"><div class="stat-icon calories"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#e8732a" stroke-width="2"><path d="M12 22c-4.97 0-9-2.69-9-6v-2c0-3.31 4.03-6 9-6s9 2.69 9 6v2c0 3.31-4.03 6-9 6z"/><path d="M12 2v6"/><path d="M9 5l3 3 3-3"/></svg></div><div class="stat-value" id="todayCalories">0</div><div class="stat-label">Calories Today</div></div>
+                <div class="stat-card"><div class="stat-icon recipes"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#1a6b3c" stroke-width="2"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/></svg></div><div class="stat-value" id="savedCount">0</div><div class="stat-label">Saved Recipes</div></div>
+                <div class="stat-card"><div class="stat-icon goal"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#2980b9" stroke-width="2"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/></svg></div><div class="stat-value" id="goalProgress">--</div><div class="stat-label">Goal</div></div>
+                <div class="stat-card"><div class="stat-icon streak"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#c0392b" stroke-width="2"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg></div><div class="stat-value" id="streakDays">0</div><div class="stat-label">Day Streak</div></div>
+            </div>
+
+            <div class="section-header"><h3>Get Started</h3></div>
+            <div class="quick-actions">
+                <div class="quick-action-card" onclick="switchTab('recipes')">
+                    <img src="https://images.unsplash.com/photo-1490645935967-10de6ba17061?w=100&q=60" alt="Search" style="object-fit:cover;">
+                    <h4>Search Recipes</h4>
+                    <p>Find your next healthy meal</p>
+                </div>
+                <div class="quick-action-card" onclick="switchTab('mealplan')">
+                    <img src="https://images.unsplash.com/photo-1466637574441-749b8f19452f?w=100&q=60" alt="Plan" style="object-fit:cover;">
+                    <h4>Create Meal Plan</h4>
+                    <p>Plan your weekly meals</p>
+                </div>
+                <div class="quick-action-card" onclick="switchTab('progress')">
+                    <img src="https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b?w=100&q=60" alt="Progress" style="object-fit:cover;">
+                    <h4>Log Progress</h4>
+                    <p>Track weight and calories</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- ==================== RECIPES ==================== -->
+        <div class="tab-content" id="tab-recipes">
+            <div class="search-bar">
+                <input type="text" id="recipeSearch" placeholder="Search recipes... try 'chicken', 'salad', 'breakfast'">
+                <button class="btn btn-primary" onclick="searchRecipes()">Search</button>
+            </div>
+            <div class="search-filters">
+                <select id="dietFilter"><option value="">All Diets</option><option value="vegetarian">Vegetarian</option><option value="vegan">Vegan</option><option value="gluten free">Gluten Free</option><option value="ketogenic">Keto</option><option value="paleo">Paleo</option></select>
+                <select id="calorieFilter"><option value="">Any Calories</option><option value="300">Under 300 cal</option><option value="500">Under 500 cal</option><option value="700">Under 700 cal</option></select>
+                <button class="btn btn-outline btn-sm" onclick="document.getElementById('recipeSearch').value='all';searchRecipes();">Browse All</button>
+            </div>
+            <div class="recipe-grid" id="recipeResults">
+                <div class="empty-state" style="grid-column:1/-1;">
+                    <img src="https://images.unsplash.com/photo-1495521821757-a1efb6729352?w=200&q=60" alt="Search" style="border-radius:50%;width:100px;height:100px;object-fit:cover;">
+                    <p>Search for recipes or click "Browse All" to see available recipes</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- ==================== SAVED ==================== -->
+        <div class="tab-content" id="tab-saved">
+            <div class="recipe-grid" id="savedRecipes">
+                <div class="empty-state" style="grid-column:1/-1;">
+                    <img src="https://images.unsplash.com/photo-1512621776951-a57141f2eefd?w=200&q=60" alt="No saved" style="border-radius:50%;width:100px;height:100px;object-fit:cover;">
+                    <p>No saved recipes yet</p>
+                    <button class="btn btn-primary" onclick="switchTab('recipes')">Browse Recipes</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- ==================== MEAL PLAN ==================== -->
+        <div class="tab-content" id="tab-mealplan">
+            <!-- Create new plan -->
+            <div class="meal-plan-builder" id="planBuilder">
+                <h3>Create a Meal Plan</h3>
+                <form id="createPlanForm" onsubmit="createMealPlan(event)">
+                    <div class="plan-form-row">
+                        <div class="form-group">
+                            <label for="planName">Plan Name</label>
+                            <input type="text" id="planName" value="Weekly Plan" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="planCalories">Daily Calories</label>
+                            <input type="number" id="planCalories" value="2000" min="1000" max="5000">
+                        </div>
+                        <div class="form-group">
+                            <label for="planMeals">Meals per Day</label>
+                            <select id="planMeals">
+                                <option value="2">2 meals</option>
+                                <option value="3" selected>3 meals</option>
+                                <option value="4">4 meals (with snack)</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="plan-form-row" style="grid-template-columns:1fr 1fr;">
+                        <div class="form-group">
+                            <label for="planStart">Start Date</label>
+                            <input type="date" id="planStart">
+                        </div>
+                        <div class="form-group">
+                            <label for="planEnd">End Date</label>
+                            <input type="date" id="planEnd">
+                        </div>
+                    </div>
+                    <button type="submit" class="btn btn-primary">Create Plan</button>
+                </form>
+            </div>
+
+            <!-- Existing Plans -->
+            <div class="section-header"><h3>Your Meal Plans</h3></div>
+            <div id="plansList" class="plans-list">
+                <div class="empty-state">
+                    <p>No meal plans yet. Create one above to get started!</p>
+                </div>
+            </div>
+
+            <!-- Plan Detail View (hidden by default) -->
+            <div id="planDetailView" style="display:none;">
+                <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;">
+                    <div>
+                        <h3 id="planDetailTitle"></h3>
+                        <p style="font-size:0.85rem;color:var(--text-light);" id="planDetailMeta"></p>
+                    </div>
+                    <button class="btn btn-outline btn-sm" onclick="closePlanDetail()">Back to Plans</button>
+                </div>
+                <div id="planMealsContainer"></div>
+            </div>
+        </div>
+
+        <!-- ==================== PROGRESS ==================== -->
+        <div class="tab-content" id="tab-progress">
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:24px;">
+                <div class="profile-card" style="max-width:none;">
+                    <h3 style="margin-bottom:20px;">Log Today's Progress</h3>
+                    <form id="progressForm" onsubmit="saveProgress(event)">
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="logWeight">Weight (kg)</label>
+                                <input type="number" id="logWeight" step="0.1" placeholder="75.5">
+                            </div>
+                            <div class="form-group">
+                                <label for="logCalories">Calories</label>
+                                <input type="number" id="logCalories" placeholder="2000">
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label for="logWorkout">Workout Minutes</label>
+                            <input type="number" id="logWorkout" placeholder="45">
+                        </div>
+                        <div class="form-group">
+                            <label for="logNotes">Notes</label>
+                            <textarea id="logNotes" rows="3" placeholder="How are you feeling today?"></textarea>
+                        </div>
+                        <button type="submit" class="btn btn-primary btn-block">Save Progress</button>
+                    </form>
+                </div>
+                <div>
+                    <div class="goal-card" id="goalCard">
+                        <h4>Your Goal</h4>
+                        <p id="goalText">No goal set yet. Go to Profile to set one.</p>
+                    </div>
+                    <div class="progress-history">
+                        <h3 style="margin-bottom:14px;">Recent History</h3>
+                        <div id="progressHistory">
+                            <p style="color:var(--text-light);font-size:0.9rem;">No progress logs yet. Start logging above!</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ==================== PROFILE ==================== -->
+        <div class="tab-content" id="tab-profile">
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:24px;">
+                <div class="profile-card" style="max-width:none;">
+                    <div class="profile-avatar-lg" id="profileAvatar">U</div>
+                    <h3 class="text-center" style="margin-bottom:24px;">Personal Info</h3>
+                    <form id="profileForm" onsubmit="saveProfile(event)">
+                        <div class="form-row">
+                            <div class="form-group"><label for="profFirstName">First Name</label><input type="text" id="profFirstName"></div>
+                            <div class="form-group"><label for="profLastName">Last Name</label><input type="text" id="profLastName"></div>
+                        </div>
+                        <div class="form-group"><label for="profEmail">Email</label><input type="email" id="profEmail" disabled></div>
+                        <div class="form-row">
+                            <div class="form-group"><label for="profAge">Age</label><input type="number" id="profAge" min="10" max="120"></div>
+                            <div class="form-group"><label for="profGender">Gender</label><select id="profGender"><option value="">Select</option><option value="male">Male</option><option value="female">Female</option><option value="other">Other</option></select></div>
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group"><label for="profHeight">Height (cm)</label><input type="number" id="profHeight" min="100" max="250"></div>
+                            <div class="form-group"><label for="profWeight">Weight (kg)</label><input type="number" id="profWeight" step="0.1" min="30" max="300"></div>
+                        </div>
+                        <button type="submit" class="btn btn-primary btn-block">Save Profile</button>
+                    </form>
+                </div>
+                <div class="profile-card" style="max-width:none;">
+                    <h3 style="margin-bottom:20px;">Set Your Goal</h3>
+                    <form id="goalForm" onsubmit="saveGoal(event)">
+                        <div class="form-group">
+                            <label for="goalType">Goal Type</label>
+                            <select id="goalType">
+                                <option value="maintenance">Maintain Weight</option>
+                                <option value="weight_loss">Lose Weight</option>
+                                <option value="muscle_gain">Build Muscle</option>
+                                <option value="endurance">Improve Endurance</option>
+                            </select>
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group"><label for="goalWeight">Target Weight (kg)</label><input type="number" id="goalWeight" step="0.1" placeholder="70"></div>
+                            <div class="form-group"><label for="goalCalories">Daily Calories</label><input type="number" id="goalCalories" value="2000" placeholder="2000"></div>
+                        </div>
+                        <div class="form-group"><label for="goalDate">Target Date</label><input type="date" id="goalDate"></div>
+                        <div class="form-group">
+                            <label>Dietary Restrictions</label>
+                            <div style="display:flex;flex-wrap:wrap;gap:8px;margin-top:6px;">
+                                <label style="font-weight:400;font-size:0.85rem;display:flex;align-items:center;gap:5px;cursor:pointer;"><input type="checkbox" name="restriction" value="vegetarian"> Vegetarian</label>
+                                <label style="font-weight:400;font-size:0.85rem;display:flex;align-items:center;gap:5px;cursor:pointer;"><input type="checkbox" name="restriction" value="vegan"> Vegan</label>
+                                <label style="font-weight:400;font-size:0.85rem;display:flex;align-items:center;gap:5px;cursor:pointer;"><input type="checkbox" name="restriction" value="gluten-free"> Gluten Free</label>
+                                <label style="font-weight:400;font-size:0.85rem;display:flex;align-items:center;gap:5px;cursor:pointer;"><input type="checkbox" name="restriction" value="dairy-free"> Dairy Free</label>
+                                <label style="font-weight:400;font-size:0.85rem;display:flex;align-items:center;gap:5px;cursor:pointer;"><input type="checkbox" name="restriction" value="keto"> Keto</label>
+                            </div>
+                        </div>
+                        <button type="submit" class="btn btn-accent btn-block">Save Goal</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Recipe Modal -->
+<div class="modal-overlay" id="recipeModal">
+    <div class="modal">
+        <div class="modal-header"><h3 id="modalTitle">Recipe Details</h3><button class="modal-close" onclick="closeModal()">&times;</button></div>
+        <div id="modalBody"></div>
+    </div>
+</div>
+
+<!-- Recipe Picker for Meal Plans -->
+<div class="recipe-picker-overlay" id="recipePicker">
+    <div class="recipe-picker">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">
+            <h3>Pick a Recipe</h3>
+            <button class="modal-close" onclick="closeRecipePicker()">&times;</button>
+        </div>
+        <div class="search-bar" style="margin-bottom:12px;">
+            <input type="text" id="pickerSearch" placeholder="Search recipes...">
+            <button class="btn btn-primary btn-sm" onclick="searchForPicker()">Search</button>
+        </div>
+        <div id="pickerResults"></div>
+    </div>
+</div>
+
+<script src="assets/js/auth.js"></script>
+<script>
+    // ==================== INIT ====================
+    let currentPlanId = null;
+    let pickerCallback = null;
+
+    // Set default dates
+    const today = new Date();
+    const nextWeek = new Date(today); nextWeek.setDate(nextWeek.getDate() + 7);
+    const fmt = d => d.toISOString().split('T')[0];
+    if (document.getElementById('planStart')) document.getElementById('planStart').value = fmt(today);
+    if (document.getElementById('planEnd')) document.getElementById('planEnd').value = fmt(nextWeek);
+
+    // Load initial data
+    loadDashboard();
+
+    // ==================== TAB NAVIGATION ====================
+    document.querySelectorAll('.sidebar-nav a[data-tab]').forEach(link => {
+        link.addEventListener('click', function(e) { e.preventDefault(); switchTab(this.dataset.tab); });
+    });
+
+    function switchTab(tabName) {
+        document.querySelectorAll('.sidebar-nav a').forEach(a => a.classList.remove('active'));
+        const activeLink = document.querySelector(`.sidebar-nav a[data-tab="${tabName}"]`);
+        if (activeLink) activeLink.classList.add('active');
+        document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
+        const tabEl = document.getElementById('tab-' + tabName);
+        if (tabEl) tabEl.classList.add('active');
+        const titles = { overview:'Overview', recipes:'Search Recipes', saved:'Saved Recipes', mealplan:'Meal Planner', progress:'Progress Tracker', profile:'Profile & Goals' };
+        document.getElementById('pageTitle').textContent = titles[tabName] || 'Dashboard';
+        document.getElementById('sidebar').classList.remove('open');
+
+        // Load data when switching tabs
+        if (tabName === 'saved') loadSavedRecipes();
+        if (tabName === 'mealplan') loadMealPlans();
+        if (tabName === 'progress') loadProgressHistory();
+        if (tabName === 'profile') loadProfile();
+    }
+
+    function toggleSidebar() { document.getElementById('sidebar').classList.toggle('open'); }
+    function checkMobile() { document.getElementById('sidebarToggle').style.display = window.innerWidth <= 768 ? 'flex' : 'none'; }
+    checkMobile(); window.addEventListener('resize', checkMobile);
+
+    // ==================== DASHBOARD LOAD ====================
+    async function loadDashboard() {
+        try {
+            // Load profile
+            const profRes = await fetch('backend/api/profile.php?action=get');
+            const profData = await profRes.json();
+            if (profData.success && profData.user) {
+                const u = profData.user;
+                const name = u.first_name || u.username || 'there';
+                document.getElementById('userGreeting').textContent = 'Hi, ' + name;
+                document.getElementById('welcomeMsg').textContent = 'Welcome back, ' + name + '!';
+                document.getElementById('userAvatar').textContent = name.charAt(0).toUpperCase();
+                if (profData.goal) {
+                    const goalLabels = {weight_loss:'Lose Weight',muscle_gain:'Build Muscle',maintenance:'Maintain',endurance:'Endurance'};
+                    document.getElementById('goalProgress').textContent = goalLabels[profData.goal.goal_type] || '--';
+                }
+            }
+        } catch(e) {}
+
+        try {
+            // Load stats
+            const statsRes = await fetch('backend/api/progress.php?action=stats');
+            const statsData = await statsRes.json();
+            if (statsData.success) {
+                document.getElementById('todayCalories').textContent = statsData.todayCalories || '0';
+                document.getElementById('streakDays').textContent = statsData.streak || '0';
+            }
+        } catch(e) {}
+
+        loadSavedRecipes();
+    }
+
+    // ==================== RECIPE SEARCH ====================
+    async function searchRecipes() {
+        const query = document.getElementById('recipeSearch').value.trim();
+        if (!query) { showToast('Type something to search', 'error'); return; }
+
+        const diet = document.getElementById('dietFilter').value;
+        const maxCalories = document.getElementById('calorieFilter').value;
+        const container = document.getElementById('recipeResults');
+        container.innerHTML = '<div class="empty-state" style="grid-column:1/-1"><div class="spinner spinner-dark" style="width:36px;height:36px"></div><p class="mt-2">Searching...</p></div>';
+
+        try {
+            let url = `backend/api/recipes.php?action=search&query=${encodeURIComponent(query)}`;
+            if (diet) url += `&diet=${encodeURIComponent(diet)}`;
+            if (maxCalories) url += `&maxCalories=${maxCalories}`;
+
+            const res = await fetch(url);
+            const data = await res.json();
+
+            if (!data.results || data.results.length === 0) {
+                container.innerHTML = '<div class="empty-state" style="grid-column:1/-1"><p>No recipes found. Try a different search.</p></div>';
+                return;
+            }
+
+            container.innerHTML = data.results.map(r => `
+                <div class="recipe-card">
+                    <img src="${r.image}" alt="${r.title}" loading="lazy">
+                    <div class="card-body">
+                        <h4>${r.title}</h4>
+                        <div class="card-meta">
+                            <span>${r.readyInMinutes || '?'} min</span>
+                            <span>${r.servings || '?'} servings</span>
+                            ${r.calories ? `<span>${r.calories} cal</span>` : ''}
+                        </div>
+                        <div class="card-actions">
+                            <button class="btn btn-sm btn-outline" onclick="viewRecipe(${r.id})">Details</button>
+                            <button class="btn btn-sm btn-primary" onclick="saveRecipe(${r.id},'${r.title.replace(/'/g,"\\'")}','${r.image}')">Save</button>
+                        </div>
+                    </div>
+                </div>
+            `).join('');
+        } catch(e) { container.innerHTML = '<div class="empty-state" style="grid-column:1/-1"><p>Something went wrong.</p></div>'; }
+    }
+
+    document.getElementById('recipeSearch').addEventListener('keypress', e => { if (e.key === 'Enter') searchRecipes(); });
+
+    // ==================== RECIPE DETAILS ====================
+    async function viewRecipe(id) {
+        const modal = document.getElementById('recipeModal');
+        const body = document.getElementById('modalBody');
+        body.innerHTML = '<div class="text-center mt-4 mb-3"><div class="spinner spinner-dark" style="width:36px;height:36px"></div></div>';
+        modal.classList.add('active');
+
+        try {
+            const res = await fetch(`backend/api/recipes.php?action=details&id=${id}`);
+            const r = await res.json();
+            if (r.error) { body.innerHTML = `<p>${r.error}</p>`; return; }
+            document.getElementById('modalTitle').textContent = r.title;
+            body.innerHTML = `
+                <img src="${r.image || ''}" alt="${r.title}" style="width:100%;border-radius:12px;margin-bottom:18px;">
+                <div class="card-meta" style="margin-bottom:16px;font-size:.88rem"><span>${r.readyInMinutes||'?'} min</span><span>${r.servings||'?'} servings</span>${r.healthScore?`<span>Health: ${r.healthScore}</span>`:''}</div>
+                ${r.summary?`<div style="margin-bottom:16px;font-size:.9rem;color:var(--text-mid);line-height:1.7">${r.summary}</div>`:''}
+                ${r.extendedIngredients?`<h4 style="margin-bottom:10px">Ingredients</h4><ul style="margin-bottom:16px;padding-left:20px">${r.extendedIngredients.map(i=>`<li style="margin-bottom:5px;font-size:.9rem">${i.original}</li>`).join('')}</ul>`:''}
+                ${r.instructions?`<h4 style="margin-bottom:10px">Instructions</h4><div style="font-size:.9rem;line-height:1.8;color:var(--text-mid)">${r.instructions}</div>`:''}
+                <div style="margin-top:24px"><button class="btn btn-primary" onclick="saveRecipe(${r.id},'${r.title.replace(/'/g,"\\'")}','${r.image||''}');closeModal()">Save Recipe</button></div>
+            `;
+        } catch(e) { body.innerHTML = '<p>Failed to load.</p>'; }
+    }
+
+    function closeModal() { document.getElementById('recipeModal').classList.remove('active'); }
+    document.getElementById('recipeModal').addEventListener('click', e => { if (e.target === document.getElementById('recipeModal')) closeModal(); });
+
+    // ==================== SAVE / REMOVE RECIPES ====================
+    async function saveRecipe(id, title, image) {
+        try {
+            const res = await fetch('backend/api/recipes.php?action=save', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({action:'save',recipeId:id,title:title,image:image}) });
+            const data = await res.json();
+            showToast(data.message || 'Saved!', data.success ? 'success' : 'error');
+            if (data.success) loadSavedRecipes();
+        } catch(e) { showToast('Failed to save', 'error'); }
+    }
+
+    async function loadSavedRecipes() {
+        try {
+            const res = await fetch('backend/api/recipes.php?action=getSaved');
+            const data = await res.json();
+            const container = document.getElementById('savedRecipes');
+            document.getElementById('savedCount').textContent = data.recipes?.length || '0';
+
+            if (!data.success || !data.recipes || data.recipes.length === 0) {
+                container.innerHTML = '<div class="empty-state" style="grid-column:1/-1"><img src="https://images.unsplash.com/photo-1512621776951-a57141f2eefd?w=200&q=60" alt="" style="border-radius:50%;width:100px;height:100px;object-fit:cover"><p>No saved recipes yet</p><button class="btn btn-primary" onclick="switchTab(\'recipes\')">Browse Recipes</button></div>';
+                return;
+            }
+
+            container.innerHTML = data.recipes.map(r => `
+                <div class="recipe-card">
+                    <img src="${r.recipe_image || 'https://images.unsplash.com/photo-1495521821757-a1efb6729352?w=400&q=60'}" alt="${r.recipe_title}" loading="lazy">
+                    <div class="card-body">
+                        <h4>${r.recipe_title}</h4>
+                        <div class="card-actions">
+                            <button class="btn btn-sm btn-outline" onclick="viewRecipe(${r.spoonacular_recipe_id})">Details</button>
+                            <button class="btn btn-sm btn-accent" onclick="removeSavedRecipe(${r.spoonacular_recipe_id})">Remove</button>
+                        </div>
+                    </div>
+                </div>
+            `).join('');
+        } catch(e) {}
+    }
+
+    async function removeSavedRecipe(id) {
+        try {
+            const res = await fetch('backend/api/recipes.php?action=remove', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({action:'remove',recipeId:id}) });
+            const data = await res.json();
+            showToast(data.message, data.success ? 'success' : 'error');
+            if (data.success) loadSavedRecipes();
+        } catch(e) { showToast('Failed to remove', 'error'); }
+    }
+
+    // ==================== MEAL PLANS ====================
+    async function createMealPlan(e) {
+        e.preventDefault();
+        try {
+            const res = await fetch('backend/api/mealplan.php?action=create', {
+                method: 'POST', headers: {'Content-Type':'application/json'},
+                body: JSON.stringify({
+                    action: 'create',
+                    plan_name: document.getElementById('planName').value,
+                    start_date: document.getElementById('planStart').value,
+                    end_date: document.getElementById('planEnd').value,
+                    daily_calories: document.getElementById('planCalories').value,
+                    meals_per_day: document.getElementById('planMeals').value
+                })
+            });
+            const data = await res.json();
+            showToast(data.message || 'Plan created!', data.success ? 'success' : 'error');
+            if (data.success) { loadMealPlans(); openPlanDetail(data.plan_id); }
+        } catch(e) { showToast('Failed to create plan', 'error'); }
+    }
+
+    async function loadMealPlans() {
+        try {
+            const res = await fetch('backend/api/mealplan.php?action=list');
+            const data = await res.json();
+            const container = document.getElementById('plansList');
+
+            if (!data.success || !data.plans || data.plans.length === 0) {
+                container.innerHTML = '<div class="empty-state"><p>No meal plans yet. Create one above!</p></div>';
+                return;
+            }
+
+            container.innerHTML = data.plans.map(p => `
+                <div class="plan-card" onclick="openPlanDetail(${p.id})">
+                    <div>
+                        <h4>${p.plan_name}</h4>
+                        <div class="plan-meta">${p.start_date} to ${p.end_date} &middot; ${p.daily_calories} cal/day &middot; ${p.meals_per_day} meals</div>
+                    </div>
+                    <div style="display:flex;gap:8px;">
+                        <button class="btn btn-sm btn-outline" onclick="event.stopPropagation();openPlanDetail(${p.id})">View</button>
+                        <button class="btn btn-sm btn-accent" onclick="event.stopPropagation();deletePlan(${p.id})">Delete</button>
+                    </div>
+                </div>
+            `).join('');
+        } catch(e) {}
+    }
+
+    async function openPlanDetail(planId) {
+        currentPlanId = planId;
+        document.getElementById('planBuilder').style.display = 'none';
+        document.getElementById('plansList').style.display = 'none';
+        document.querySelector('#tab-mealplan .section-header').style.display = 'none';
+        document.getElementById('planDetailView').style.display = 'block';
+
+        try {
+            const res = await fetch(`backend/api/mealplan.php?action=get&id=${planId}`);
+            const data = await res.json();
+            if (!data.success) { showToast('Failed to load plan', 'error'); closePlanDetail(); return; }
+
+            const plan = data.plan;
+            document.getElementById('planDetailTitle').textContent = plan.plan_name;
+            document.getElementById('planDetailMeta').textContent = `${plan.start_date} to ${plan.end_date} | ${plan.daily_calories} cal/day`;
+
+            // Build day view
+            const start = new Date(plan.start_date);
+            const end = new Date(plan.end_date);
+            const mealTypes = ['breakfast','lunch','dinner'];
+            if (plan.meals_per_day >= 4) mealTypes.push('snack');
+
+            let html = '';
+            for (let d = new Date(start); d <= end; d.setDate(d.getDate()+1)) {
+                const dateStr = fmt(d);
+                const dayName = d.toLocaleDateString('en-US', { weekday:'long', month:'short', day:'numeric' });
+                const dayMeals = (plan.meals || []).filter(m => m.date === dateStr);
+                const dayCals = dayMeals.reduce((sum,m) => sum + (parseInt(m.calories)||0), 0);
+
+                html += `<div class="meal-day">
+                    <div class="meal-day-header"><span>${dayName}</span><span class="cal-count">${dayCals} / ${plan.daily_calories} cal</span></div>`;
+
+                for (const type of mealTypes) {
+                    const meal = dayMeals.find(m => m.meal_type === type);
+                    if (meal) {
+                        html += `<div class="meal-slot">
+                            <span class="meal-slot-type">${type}</span>
+                            <span class="meal-slot-name">${meal.recipe_title}</span>
+                            <span class="meal-slot-cal">${meal.calories || 0} cal</span>
+                            <div class="meal-slot-actions"><button class="remove-btn" onclick="removeMeal(${meal.id})" title="Remove">&times;</button></div>
+                        </div>`;
+                    } else {
+                        html += `<div class="meal-slot">
+                            <span class="meal-slot-type">${type}</span>
+                            <span class="meal-slot-name" style="color:var(--text-light);font-style:italic;">No meal added</span>
+                            <span class="meal-slot-cal"></span>
+                            <div class="meal-slot-actions"><button class="add-meal-btn" onclick="openRecipePicker('${dateStr}','${type}')">+ Add</button></div>
+                        </div>`;
+                    }
+                }
+                html += '</div>';
+            }
+            document.getElementById('planMealsContainer').innerHTML = html;
+        } catch(e) { showToast('Error loading plan', 'error'); }
+    }
+
+    function closePlanDetail() {
+        document.getElementById('planDetailView').style.display = 'none';
+        document.getElementById('planBuilder').style.display = 'block';
+        document.getElementById('plansList').style.display = 'grid';
+        document.querySelector('#tab-mealplan .section-header').style.display = 'flex';
+        currentPlanId = null;
+    }
+
+    async function removeMeal(mealId) {
+        try {
+            const res = await fetch('backend/api/mealplan.php?action=removeMeal', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({action:'removeMeal',meal_id:mealId}) });
+            const data = await res.json();
+            if (data.success && currentPlanId) openPlanDetail(currentPlanId);
+        } catch(e) {}
+    }
+
+    async function deletePlan(planId) {
+        if (!confirm('Delete this meal plan?')) return;
+        try {
+            const res = await fetch('backend/api/mealplan.php?action=delete', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({action:'delete',plan_id:planId}) });
+            const data = await res.json();
+            showToast(data.message, data.success ? 'success' : 'error');
+            loadMealPlans();
+        } catch(e) {}
+    }
+
+    // ==================== RECIPE PICKER FOR MEAL PLANS ====================
+    function openRecipePicker(date, mealType) {
+        pickerCallback = { date, mealType };
+        document.getElementById('recipePicker').classList.add('active');
+        document.getElementById('pickerSearch').value = mealType === 'breakfast' ? 'breakfast' : mealType === 'snack' ? 'snack' : '';
+        searchForPicker();
+    }
+
+    function closeRecipePicker() { document.getElementById('recipePicker').classList.remove('active'); }
+    document.getElementById('recipePicker').addEventListener('click', e => { if (e.target === document.getElementById('recipePicker')) closeRecipePicker(); });
+
+    async function searchForPicker() {
+        const query = document.getElementById('pickerSearch').value.trim() || 'all';
+        const container = document.getElementById('pickerResults');
+        container.innerHTML = '<div class="text-center mt-2"><div class="spinner spinner-dark" style="width:28px;height:28px"></div></div>';
+
+        try {
+            const res = await fetch(`backend/api/recipes.php?action=search&query=${encodeURIComponent(query)}`);
+            const data = await res.json();
+
+            if (!data.results || data.results.length === 0) { container.innerHTML = '<p style="color:var(--text-light)">No results</p>'; return; }
+
+            container.innerHTML = data.results.map(r => `
+                <div class="recipe-pick-item" onclick="pickRecipe(${r.id},'${r.title.replace(/'/g,"\\'")}',${r.calories||0})">
+                    <img src="${r.image}" alt="${r.title}">
+                    <div><h4>${r.title}</h4><span>${r.readyInMinutes||'?'} min ${r.calories ? '| '+r.calories+' cal' : ''}</span></div>
+                </div>
+            `).join('');
+        } catch(e) { container.innerHTML = '<p>Error loading recipes</p>'; }
+    }
+
+    document.getElementById('pickerSearch').addEventListener('keypress', e => { if (e.key === 'Enter') searchForPicker(); });
+
+    async function pickRecipe(recipeId, title, calories) {
+        if (!pickerCallback || !currentPlanId) return;
+        try {
+            const res = await fetch('backend/api/mealplan.php?action=addMeal', {
+                method:'POST', headers:{'Content-Type':'application/json'},
+                body: JSON.stringify({ action:'addMeal', plan_id: currentPlanId, date: pickerCallback.date, meal_type: pickerCallback.mealType, recipe_id: recipeId, title: title, calories: calories })
+            });
+            const data = await res.json();
+            showToast(data.message || 'Added!', data.success ? 'success' : 'error');
+            closeRecipePicker();
+            if (currentPlanId) openPlanDetail(currentPlanId);
+        } catch(e) { showToast('Failed to add meal', 'error'); }
+    }
+
+    // ==================== PROGRESS ====================
+    async function saveProgress(e) {
+        e.preventDefault();
+        const weight = document.getElementById('logWeight').value;
+        const calories = document.getElementById('logCalories').value;
+        const workout = document.getElementById('logWorkout').value;
+        const notes = document.getElementById('logNotes').value;
+
+        if (!weight && !calories && !workout) { showToast('Fill in at least one field', 'error'); return; }
+
+        try {
+            const res = await fetch('backend/api/progress.php?action=log', {
+                method:'POST', headers:{'Content-Type':'application/json'},
+                body: JSON.stringify({ action:'log', weight, calories, workout, notes })
+            });
+            const data = await res.json();
+            showToast(data.message || 'Logged!', data.success ? 'success' : 'error');
+            if (data.success) {
+                document.getElementById('progressForm').reset();
+                loadProgressHistory();
+                if (calories) document.getElementById('todayCalories').textContent = calories;
+            }
+        } catch(e) { showToast('Failed to log', 'error'); }
+    }
+
+    async function loadProgressHistory() {
+        try {
+            const res = await fetch('backend/api/progress.php?action=history&limit=10');
+            const data = await res.json();
+            const container = document.getElementById('progressHistory');
+
+            if (!data.success || !data.logs || data.logs.length === 0) {
+                container.innerHTML = '<p style="color:var(--text-light);font-size:0.9rem">No logs yet. Start tracking above!</p>';
+                return;
+            }
+
+            container.innerHTML = `<table class="progress-table">
+                <thead><tr><th>Date</th><th>Weight</th><th>Calories</th><th>Workout</th></tr></thead>
+                <tbody>${data.logs.map(l => `<tr>
+                    <td>${new Date(l.log_date).toLocaleDateString('en-US',{month:'short',day:'numeric'})}</td>
+                    <td>${l.weight_kg ? l.weight_kg + ' kg' : '-'}</td>
+                    <td>${l.calories_consumed || '-'}</td>
+                    <td>${l.workout_minutes ? l.workout_minutes + ' min' : '-'}</td>
+                </tr>`).join('')}</tbody>
+            </table>`;
+        } catch(e) {}
+    }
+
+    // ==================== PROFILE & GOALS ====================
+    async function loadProfile() {
+        try {
+            const res = await fetch('backend/api/profile.php?action=get');
+            const data = await res.json();
+            if (data.success && data.user) {
+                const u = data.user;
+                document.getElementById('profFirstName').value = u.first_name || '';
+                document.getElementById('profLastName').value = u.last_name || '';
+                document.getElementById('profEmail').value = u.email || '';
+                document.getElementById('profAge').value = u.age || '';
+                document.getElementById('profGender').value = u.gender || '';
+                document.getElementById('profHeight').value = u.height_cm || '';
+                document.getElementById('profWeight').value = u.weight_kg || '';
+                document.getElementById('profileAvatar').textContent = (u.first_name || u.username || 'U').charAt(0).toUpperCase();
+            }
+            if (data.goal) {
+                const g = data.goal;
+                document.getElementById('goalType').value = g.goal_type || 'maintenance';
+                document.getElementById('goalWeight').value = g.target_weight_kg || '';
+                document.getElementById('goalCalories').value = g.daily_calorie_target || 2000;
+                document.getElementById('goalDate').value = g.target_date || '';
+
+                const goalLabels = {weight_loss:'Lose Weight',muscle_gain:'Build Muscle',maintenance:'Maintain Weight',endurance:'Improve Endurance'};
+                document.getElementById('goalText').textContent = `Goal: ${goalLabels[g.goal_type]||g.goal_type}${g.target_weight_kg ? ' | Target: '+g.target_weight_kg+' kg' : ''}${g.daily_calorie_target ? ' | '+g.daily_calorie_target+' cal/day' : ''}`;
+            }
+        } catch(e) {}
+    }
+
+    async function saveProfile(e) {
+        e.preventDefault();
+        try {
+            const res = await fetch('backend/api/profile.php?action=update', {
+                method:'POST', headers:{'Content-Type':'application/json'},
+                body: JSON.stringify({
+                    action:'update',
+                    first_name: document.getElementById('profFirstName').value,
+                    last_name: document.getElementById('profLastName').value,
+                    age: document.getElementById('profAge').value || null,
+                    gender: document.getElementById('profGender').value || null,
+                    height_cm: document.getElementById('profHeight').value || null,
+                    weight_kg: document.getElementById('profWeight').value || null
+                })
+            });
+            const data = await res.json();
+            showToast(data.message, data.success ? 'success' : 'error');
+        } catch(e) { showToast('Failed to update', 'error'); }
+    }
+
+    async function saveGoal(e) {
+        e.preventDefault();
+        const restrictions = [...document.querySelectorAll('input[name=restriction]:checked')].map(c => c.value);
+        try {
+            const res = await fetch('backend/api/profile.php?action=setGoal', {
+                method:'POST', headers:{'Content-Type':'application/json'},
+                body: JSON.stringify({
+                    action:'setGoal',
+                    goal_type: document.getElementById('goalType').value,
+                    target_weight: document.getElementById('goalWeight').value || null,
+                    daily_calories: document.getElementById('goalCalories').value || 2000,
+                    target_date: document.getElementById('goalDate').value || null,
+                    restrictions: restrictions
+                })
+            });
+            const data = await res.json();
+            showToast(data.message, data.success ? 'success' : 'error');
+            if (data.success) loadProfile();
+        } catch(e) { showToast('Failed to save goal', 'error'); }
+    }
+</script>
+</body>
+</html>
